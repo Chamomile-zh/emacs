@@ -1,0 +1,12 @@
+custom.el
+elpa/
+elpaca/
+eln-cache/
+auto-save-list/
+recentf.eld
+places.eld
+tabsession.el
+history
+ido.last
+smex-items
+*.elc
