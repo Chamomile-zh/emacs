@@ -1,7 +1,13 @@
 ;;; early-init.el --- Early initialization -*- lexical-binding: t; -*-
 
-;; 启动期间调高 GC 阈值至 100MB，加速启动
+;; 启动期间减少 GC 次数，启动完成后恢复 16 MiB，避免交互时长时间停顿。
 (setq gc-cons-threshold (* 100 1024 1024))
+
+(defun chamomile/restore-gc-threshold ()
+  "Restore the lower GC threshold for interactive use."
+  (setq gc-cons-threshold (* 16 1024 1024)))
+
+(add-hook 'emacs-startup-hook #'chamomile/restore-gc-threshold)
 
 ;; 用预生成的 autoload 缓存加速启动时的包激活
 (setq package-quickstart t)

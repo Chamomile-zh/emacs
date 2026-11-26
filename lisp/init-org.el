@@ -1,82 +1,91 @@
-;;; init-org.el --- Tsoding-style Org-mode Agenda & Capture -*- lexical-binding: t; -*-
+;;; init-org.el --- Org agenda, capture and clipboard links -*- lexical-binding: t; -*-
 
-;; 确保日程目录存在，避免首次调用 org-agenda 时提示目录不存在
-(defvar my/org-agenda-dir (expand-file-name "~/Documents/Agenda/"))
-(unless (file-directory-p my/org-agenda-dir)
-  (make-directory my/org-agenda-dir t))
+(defvar chamomile/org-agenda-dir (expand-file-name "~/Documents/Agenda/")
+  "Directory for Org agenda and captured tasks.")
 
-;; ==========================================
-;; 1. 核心 Org-mode 与日程视图配置
-;; ==========================================
+(defun chamomile/org-ensure-agenda-directory ()
+  "Create the agenda directory if it does not yet exist."
+  (make-directory chamomile/org-agenda-dir t))
+
+;; 只注册入口。打开普通 .org 文件不需要加载 Agenda、Capture 或剪贴板插件。
 (use-package org
   :ensure nil
-  :bind (("C-x a"     . org-agenda)
-         ("C-c c"     . org-capture)
-         ("C-c C-x j" . org-clock-jump-to-current-clock)
-         ("C-x p w"   . rc/org-kill-heading-name-save))
-  :config
-  (setq org-agenda-files (list my/org-agenda-dir)
-        org-export-backends '(md)
+  :defer t
+  :init
+  (setq org-export-backends '(md)
         org-log-done 'time)
+  :config
+  ;; Org 核心也会查询日程文件，比如补全 refile 的目标。
+  (setq org-agenda-files (list chamomile/org-agenda-dir)))
 
-  ;; 自定义日程过滤视图（按 C-x a 后按 u / p / w 触发）
+(use-package org-agenda
+  :ensure nil
+  :bind ("C-x a" . org-agenda)
+  :config
+  (chamomile/org-ensure-agenda-directory)
+  ;; 在议程分发菜单中按 u / p / w，分别打开未排期、个人和工作视图。
   (setq org-agenda-custom-commands
         '(("u" "Unscheduled" tags "+personal-SCHEDULED={.+}-DEADLINE={.+}/!+TODO"
            ((org-agenda-sorting-strategy '(priority-down))))
           ("p" "Personal" ((agenda "" ((org-agenda-tag-filter-preset (list "+personal"))))))
-          ("w" "Work" ((agenda "" ((org-agenda-tag-filter-preset (list "+work"))))))))
+          ("w" "Work" ((agenda "" ((org-agenda-tag-filter-preset (list "+work")))))))))
 
-  ;; 全局随时捕获任务模板（按 C-c c 后按 p / K 触发）
-  (let ((tasks-file (expand-file-name "Tasks.org" my/org-agenda-dir)))
+(use-package org-capture
+  :ensure nil
+  :bind ("C-c c" . org-capture)
+  :config
+  (chamomile/org-ensure-agenda-directory)
+  (let ((tasks-file (expand-file-name "Tasks.org" chamomile/org-agenda-dir)))
+    ;; p 记录普通任务；大写 K 只在展开模板时加载 org-cliplink。
     (setq org-capture-templates
           `(("p" "Capture task" entry (file ,tasks-file)
              "* TODO %?\n  SCHEDULED: %t\n")
             ("K" "Cliplink capture task" entry (file ,tasks-file)
-             "* TODO %(org-cliplink-capture) \n  SCHEDULED: %t\n" :empty-lines 1))))
+             "* TODO %(org-cliplink-capture) \n  SCHEDULED: %t\n" :empty-lines 1)))))
 
-  ;; 辅助函数 1：记录任务被推迟的次数（MOVE_COUNTER）
-  (defun rc/org-increment-move-counter ()
-    "Increment MOVE_COUNTER property on current Org heading."
-    (interactive)
-    (let* ((point (point))
-           (move-counter-name "MOVE_COUNTER")
-           (raw-val (org-entry-get point move-counter-name))
-           (move-counter-value (1+ (string-to-number (or raw-val "0")))))
-      (org-entry-put point move-counter-name
-                     (number-to-string move-counter-value)))
-    nil)
+(use-package org-clock
+  :ensure nil
+  :bind ("C-c C-x j" . org-clock-jump-to-current-clock))
 
-  ;; 辅助函数 2：提取并复制当前 Org 标题纯文本（去除 TODO 与标签）
-  (defun rc/org-get-heading-name ()
-    (nth 4 (org-heading-components)))
+(defun chamomile/org-increment-move-counter ()
+  "Increment the MOVE_COUNTER property of the current Org heading."
+  (interactive)
+  (require 'org)
+  (let* ((name "MOVE_COUNTER")
+         (count (string-to-number (or (org-entry-get (point) name) "0"))))
+    (org-entry-put (point) name (number-to-string (1+ count))))
+  nil)
 
-  (defun rc/org-kill-heading-name-save ()
-    "Copy current Org heading text to kill-ring."
-    (interactive)
-    (let ((heading-name (rc/org-get-heading-name)))
-      (when heading-name
-        (kill-new heading-name)
-        (message "Kill \"%s\"" heading-name)))))
+(defun chamomile/org-get-heading-name ()
+  "Return the current Org heading without TODO keywords or tags."
+  (require 'org)
+  (nth 4 (org-heading-components)))
 
-;; ==========================================
-;; 2. 剪贴板网页标题自动抓取（org-cliplink）
-;; ==========================================
+(defun chamomile/org-kill-heading-name-save ()
+  "Copy the current Org heading text to the kill ring."
+  (interactive)
+  (when-let* ((name (chamomile/org-get-heading-name)))
+    (kill-new name)
+    (message "Kill \"%s\"" name)))
+
+(keymap-global-set "C-x p w" #'chamomile/org-kill-heading-name-save)
+
+;; 不用 :after org：快捷键从启动起就能用，按下才加载 org-cliplink。
 (use-package org-cliplink
-  :after org
-  :bind (("C-x p i" . org-cliplink)
-         ("C-x p t" . rc/cliplink-task))
-  :config
-  (defun rc/cliplink-task ()
-    "Insert a TODO item with title fetched from URL in clipboard."
-    (interactive)
-    (org-cliplink-retrieve-title
-     (substring-no-properties (current-kill 0))
-     (lambda (url title)
-       (insert (if title
-                   (concat "* TODO " title
-                           "\n  [[" url "][" title "]]")
-                 (concat "* TODO " url
-                         "\n  [[" url "]]")))))))
+  :commands (org-cliplink-capture org-cliplink-retrieve-title)
+  :bind ("C-x p i" . org-cliplink))
+
+(defun chamomile/cliplink-task ()
+  "Insert a TODO item with the title of the URL on the clipboard."
+  (interactive)
+  (org-cliplink-retrieve-title
+   (substring-no-properties (current-kill 0))
+   (lambda (url title)
+     (insert (if title
+                 (concat "* TODO " title "\n  [[" url "][" title "]]")
+               (concat "* TODO " url "\n  [[" url "]]"))))))
+
+(keymap-global-set "C-x p t" #'chamomile/cliplink-task)
 
 (provide 'init-org)
 ;;; init-org.el ends here
