@@ -3,8 +3,8 @@
 ;; 启动期间调高 GC 阈值至 100MB，加速启动
 (setq gc-cons-threshold (* 100 1024 1024))
 
-;; 阻止 package.el 自动初始化
-(setq package-enable-at-startup nil)
+;; 用预生成的 autoload 缓存加速启动时的包激活
+(setq package-quickstart t)
 
 ;; 在 GUI 渲染前禁用多余边框，防止启动闪烁
 (push '(menu-bar-lines . 0) default-frame-alist)

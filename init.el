@@ -16,7 +16,6 @@
 (setq package-archives
       '(("melpa" . "https://melpa.org/packages/")
         ("gnu"   . "https://elpa.gnu.org/packages/")))
-(package-initialize)
 
 (require 'use-package)
 ;; 当本地索引过期导致安装失败时，自动刷新一次软件源并重试
@@ -90,7 +89,9 @@
          ("M-X" . smex-major-mode-commands)))
 
 ;; 7. 加载模块
-(require 'simpc-mode)
+(use-package simpc-mode
+  :ensure nil
+  :mode ("\\.[ch]\\(pp\\)?\\'" . simpc-mode))
 (require 'init-tools)
 (require 'init-org)
 

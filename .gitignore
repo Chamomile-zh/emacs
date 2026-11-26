@@ -9,4 +9,5 @@ tabsession.el
 history
 ido.last
 smex-items
+package-quickstart.el
 *.elc

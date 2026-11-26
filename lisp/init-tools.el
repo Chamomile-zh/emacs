@@ -13,13 +13,12 @@
 
 ;; 2. 多光标批量编辑
 (use-package multiple-cursors
-  :config
-  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
-  (global-set-key (kbd "C->")         'mc/mark-next-like-this)
-  (global-set-key (kbd "C-<")         'mc/mark-previous-like-this)
-  (global-set-key (kbd "C-c C-<")     'mc/mark-all-like-this)
-  (global-set-key (kbd "C-c C-s")     'mc/skip-to-next-like-this)
-  (global-set-key (kbd "C-c C-d")     'mc/unmark-next-like-this))
+  :bind (("C-S-c C-S-c" . mc/edit-lines)
+         ("C->" . mc/mark-next-like-this)
+         ("C-<" . mc/mark-previous-like-this)
+         ("C-c C-<" . mc/mark-all-like-this)
+         ("C-c C-s" . mc/skip-to-next-like-this)
+         ("C-c C-d" . mc/unmark-next-like-this)))
 
 ;; 3. Git 集成
 (use-package magit
@@ -157,6 +156,7 @@
 
 (use-package ffap
   :ensure nil
+  :defer t
   :config
   (add-to-list 'ffap-alist '(simpc-mode . ffap-c-mode))
   (setq ffap-c-path
@@ -166,6 +166,7 @@
 (defun my/find-file-at-point ()
   "Open C/C++ header or file at point in another window."
   (interactive)
+  (require 'ffap)
   (save-excursion
     (beginning-of-line)
     (if (looking-at "^[ \t]*#[ \t]*include[ \t]*[<\"\\]\\([^>\"\\]+\\)[>\"\\]")
