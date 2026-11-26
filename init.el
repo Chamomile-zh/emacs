@@ -21,9 +21,9 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
-;; 加载 Emacs 原生内置高对比度暗色主题（零依赖、无任何警告）
-(load-theme 'modus-vivendi t)
-
+(use-package gruvbox-theme
+  :config
+  (load-theme 'gruvbox-dark-medium t)) ; 暖灰棕底色，黑色指针极其清晰
 (defun my/setup-fonts ()
   "Configure Maple Mono NF CN font for both ASCII and CJK."
   (when (display-graphic-p)
@@ -80,9 +80,10 @@
   :bind (("M-x" . smex)
          ("M-X" . smex-major-mode-commands)))
 
-;; 7. 加载自写模块
+;; 7. 加载模块
 (require 'simpc-mode)
 (require 'init-tools)
+(require 'init-org)
 
 (provide 'init)
 ;;; init.el ends here

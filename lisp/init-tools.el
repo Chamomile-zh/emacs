@@ -1,6 +1,6 @@
 ;;; init-tools.el --- Tsoding workflow tools & custom functions -*- lexical-binding: t; -*-
 
-;; 1. 文本补全：拒绝自动弹窗，用 M-/ 手动触发全局动态补全
+;; 1. 手动触发文本补全（M-/）
 (setq hippie-expand-try-functions-list
       '(try-expand-dabbrev
         try-expand-dabbrev-all-buffers
@@ -11,18 +11,30 @@
         try-expand-line))
 (global-set-key (kbd "M-/") 'hippie-expand)
 
-;; 2. 多光标重构（Tsoding 核心编辑利器）
+;; 2. 多光标批量编辑
 (use-package multiple-cursors
-  :bind (("C-S-c C-S-c" . mc/edit-lines)
-         ("C->"         . mc/mark-next-like-this)
-         ("C-<"         . mc/mark-previous-like-this)
-         ("C-c C-<"     . mc/mark-all-like-this)))
+  :config
+  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
+  (global-set-key (kbd "C->")         'mc/mark-next-like-this)
+  (global-set-key (kbd "C-<")         'mc/mark-previous-like-this)
+  (global-set-key (kbd "C-c C-<")     'mc/mark-all-like-this)
+  (global-set-key (kbd "C-c C-s")     'mc/skip-to-next-like-this)
+  (global-set-key (kbd "C-c C-d")     'mc/unmark-next-like-this))
 
 ;; 3. Git 集成
 (use-package magit
   :bind ("C-x g" . magit-status))
 
-;; 4. 编译工作流：一键编译 + ANSI 颜色支持 + 自动滚动至首错
+;; 4. Rust 与 Zig 轻量主模式支持
+(use-package rust-mode
+  :mode "\\.rs\\'")
+
+(use-package zig-mode
+  :mode "\\.zig\\'"
+  :config
+  (setq zig-format-on-save nil))
+
+;; 5. 一键编译与 ANSI 色彩渲染
 (setq compilation-scroll-output 'first-error)
 (global-set-key (kbd "<f5>") 'compile)
 (global-set-key (kbd "<f6>") 'recompile)
@@ -31,23 +43,29 @@
   :ensure nil
   :hook (compilation-filter . ansi-color-compilation-filter))
 
-;; 5. Dired 文件管理器极简双栏化
+;; 6. 分屏窗口快速切换（Shift + 方向键直接移动焦点）
+(windmove-default-keybindings)
+
+;; 7. 误关分屏撤销与恢复（C-c <left> 撤销布局，C-c <right> 重做布局）
+(use-package winner
+  :ensure nil
+  :config
+  (winner-mode 1))
+
+;; 8. Dired 双栏极简文件管理
 (use-package dired
   :ensure nil
   :init
-  ;; 双窗口并排时，按 C (复制) 或 R (移动) 默认目标为另一侧窗口路径
   (setq dired-dwim-target t
         dired-listing-switches "-alh --group-directories-first"
         dired-recursive-copies 'always
         dired-recursive-deletes 'top)
   :hook
-  ;; 默认隐藏权限、硬链接、属主等冗余信息，按 ( 键可随时切换显示详情
   (dired-mode . dired-hide-details-mode)
   :bind (:map dired-mode-map
-              ;; 在 Dired 中按 C-c C-e 进入 wdired 模式，像改文本一样批量重命名文件
               ("C-c C-e" . wdired-change-to-wdired-mode)))
 
-;; 6. Tsoding 自写复制当前行函数（保留列光标位置）
+;; 9. Tsoding 自写复制当前行函数（保留列光标位置）
 (defun rc/duplicate-line ()
   "Duplicate current line and keep column position."
   (interactive)
@@ -62,7 +80,20 @@
 
 (global-set-key (kbd "C-,") 'rc/duplicate-line)
 
-;; 7. 行尾多余空格治理
+;; 10. Tsoding 选中文本项目全局搜索（C-c s）
+(defun rc/rgrep-selected (beg end)
+  "Search for selected region across the project using rgrep."
+  (interactive (if (use-region-p)
+                   (list (region-beginning) (region-end))
+                 (list (point) (point))))
+  (let ((selection (buffer-substring-no-properties beg end)))
+    (if (string-empty-p selection)
+        (call-interactively 'rgrep)
+      (rgrep selection "*" default-directory))))
+
+(global-set-key (kbd "C-c s") 'rc/rgrep-selected)
+
+;; 11. 行尾多余空格治理：高亮显示 + C/C++/Rust/Zig 保存时自动清理
 (setq-default show-trailing-whitespace t)
 (dolist (hook '(term-mode-hook
                 vterm-mode-hook
@@ -71,7 +102,23 @@
                 minibuffer-setup-hook))
   (add-hook hook (lambda () (setq show-trailing-whitespace nil))))
 
+(defun rc/auto-clean-whitespace-on-save ()
+  "Automatically delete trailing whitespace before saving in code buffers."
+  (add-hook 'before-save-hook #'delete-trailing-whitespace nil t))
+
+(dolist (mode-hook '(simpc-mode-hook
+                     c-mode-hook
+                     c++-mode-hook
+                     rust-mode-hook
+                     zig-mode-hook))
+  (add-hook mode-hook #'rc/auto-clean-whitespace-on-save))
+
 (global-set-key (kbd "C-c w") 'delete-trailing-whitespace)
+
+;; 12. 路径跳转、代码大纲与防误退出保护
+(global-set-key (kbd "C-x C-g") 'find-file-at-point)
+(global-set-key (kbd "C-c i m") 'imenu)
+(setq confirm-kill-emacs 'y-or-n-p)
 
 (provide 'init-tools)
 ;;; init-tools.el ends here
