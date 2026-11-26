@@ -89,10 +89,8 @@
          ("M-X" . smex-major-mode-commands)))
 
 ;; 7. 加载模块
-(use-package simpc-mode
-  :ensure nil
-  :mode ("\\.[ch]\\(pp\\)?\\'" . simpc-mode))
 (require 'init-tools)
+(require 'init-lsp)
 (require 'init-org)
 
 (provide 'init)

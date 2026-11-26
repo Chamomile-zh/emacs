@@ -1,15 +1,7 @@
 ;;; init-tools.el --- Tsoding workflow tools & custom functions -*- lexical-binding: t; -*-
 
-;; 1. 手动触发文本补全（M-/）
-(setq hippie-expand-try-functions-list
-      '(try-expand-dabbrev
-        try-expand-dabbrev-all-buffers
-        try-expand-dabbrev-from-kill
-        try-complete-file-name-partially
-        try-complete-file-name
-        try-expand-all-abbrevs
-        try-expand-line))
-(global-set-key (kbd "M-/") 'hippie-expand)
+;; 1. 禁用旧的手动文本补全键，改用代码缓冲区的 Corfu 自动补全。
+(keymap-global-unset "M-/")
 
 ;; 2. 多光标批量编辑
 (use-package multiple-cursors
@@ -37,10 +29,17 @@
   :mode "\\.go\\'")
 
 (use-package lua-mode
+  :ensure nil
   :mode "\\.lua\\'")
 
 (use-package typescript-mode
-  :mode ("\\.ts\\'" "\\.tsx\\'"))
+  :mode (("\\.ts\\'" . typescript-mode)
+         ("\\.tsx\\'" . rc/typescript-tsx-mode))
+  :config
+  ;; 区分 TSX 的 LSP 语言 ID，不依赖额外的 tree-sitter grammar。
+  (define-derived-mode rc/typescript-tsx-mode typescript-mode "TSX")
+  (setq auto-mode-alist
+        (delete '("\\.tsx?\\'" . typescript-mode) auto-mode-alist)))
 
 (use-package cmake-mode
   :mode ("CMakeLists\\.txt\\'" "\\.cmake\\'"))
@@ -129,16 +128,21 @@
   "Automatically delete trailing whitespace before saving in code buffers."
   (add-hook 'before-save-hook #'delete-trailing-whitespace nil t))
 
-(dolist (mode-hook '(simpc-mode-hook
-                     c-mode-hook
-                     c++-mode-hook
-                     rust-mode-hook
-                     zig-mode-hook))
+(dolist (mode-hook '(c-mode-hook c++-mode-hook
+                     c-ts-mode-hook c++-ts-mode-hook
+                     rust-mode-hook zig-mode-hook))
   (add-hook mode-hook #'rc/auto-clean-whitespace-on-save))
+
+(defun rc/c-indent-four-spaces ()
+  (setq-local c-basic-offset 4))
+
+(add-hook 'c-mode-hook #'rc/c-indent-four-spaces)
+(add-hook 'c++-mode-hook #'rc/c-indent-four-spaces)
+(setq c-ts-indent-offset 4)
 
 (global-set-key (kbd "C-c w") 'delete-trailing-whitespace)
 
-;; 12. 路径跳转（绕过 ido 干扰，支持 simpc-mode 下的 C/C++ 系统与本地头文件）
+;; 12. 路径跳转（绕过 ido 干扰，支持 C/C++ 系统与本地头文件）
 (defun my/get-gcc-cpp-include-dirs ()
   "Dynamically locate Arch Linux GCC C++ standard library include paths."
   (let ((base-dir "/usr/include/c++"))
@@ -158,7 +162,6 @@
   :ensure nil
   :defer t
   :config
-  (add-to-list 'ffap-alist '(simpc-mode . ffap-c-mode))
   (setq ffap-c-path
         (append '("/usr/include" "/usr/local/include")
                 (my/get-gcc-cpp-include-dirs))))
@@ -183,19 +186,6 @@
 
 (global-set-key (kbd "C-x C-g") #'my/find-file-at-point)
 (global-set-key (kbd "C-c i m") 'imenu)
-
-;; 为 simpc-mode 配置轻量级 Imenu 正则大纲（支持函数、结构体、类跳转）
-(defun my/simpc-setup-imenu ()
-  "Configure lightweight regex-based imenu index for `simpc-mode'."
-  (setq-local imenu-generic-expression
-              '(("Functions"
-                 "^[a-zA-Z_][a-zA-Z0-9_:*&<> \t]+?[ \t]+\\([a-zA-Z_][a-zA-Z0-9_:]*\\)[ \t]*([^;]*$"
-                 1)
-                ("Types"
-                 "^[ \t]*\\(?:typedef[ \t]+\\)?\\(?:struct\\|class\\|enum\\|union\\)[ \t]+\\([a-zA-Z_][a-zA-Z0-9_]*\\)"
-                 1))))
-
-(add-hook 'simpc-mode-hook #'my/simpc-setup-imenu)
 
 ;; 13. Emacs Lisp 交互式表达式求值并插入结果（C-c C-j）
 (add-hook 'emacs-lisp-mode-hook
