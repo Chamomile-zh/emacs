@@ -25,7 +25,7 @@
 (use-package magit
   :bind ("C-x g" . magit-status))
 
-;; 4. Rust 与 Zig 轻量主模式支持
+;; 4. 多语言轻量主模式支持（按后缀延迟加载，零启动开销）
 (use-package rust-mode
   :mode "\\.rs\\'")
 
@@ -33,6 +33,30 @@
   :mode "\\.zig\\'"
   :config
   (setq zig-format-on-save nil))
+
+(use-package go-mode
+  :mode "\\.go\\'")
+
+(use-package lua-mode
+  :mode "\\.lua\\'")
+
+(use-package typescript-mode
+  :mode ("\\.ts\\'" "\\.tsx\\'"))
+
+(use-package cmake-mode
+  :mode ("CMakeLists\\.txt\\'" "\\.cmake\\'"))
+
+(use-package markdown-mode
+  :mode ("\\.md\\'" "\\.markdown\\'"))
+
+(use-package toml-mode
+  :mode "\\.toml\\'")
+
+(use-package python
+  :ensure nil
+  :mode ("\\.py\\'" . python-mode)
+  :config
+  (setq python-indent-offset 4))
 
 ;; 5. 一键编译与 ANSI 色彩渲染
 (setq compilation-scroll-output 'first-error)
@@ -115,10 +139,66 @@
 
 (global-set-key (kbd "C-c w") 'delete-trailing-whitespace)
 
-;; 12. 路径跳转、代码大纲与防误退出保护
-(global-set-key (kbd "C-x C-g") 'find-file-at-point)
-(global-set-key (kbd "C-c i m") 'imenu)
-(setq confirm-kill-emacs 'y-or-n-p)
+;; 12. 路径跳转（绕过 ido 干扰，支持 simpc-mode 下的 C/C++ 系统与本地头文件）
+(defun my/get-gcc-cpp-include-dirs ()
+  "Dynamically locate Arch Linux GCC C++ standard library include paths."
+  (let ((base-dir "/usr/include/c++"))
+    (when (file-directory-p base-dir)
+      (let* ((versions (sort (directory-files base-dir nil "^[0-9]+\\(\\.[0-9]+\\)*$")
+                             #'version>))
+             (latest (car versions)))
+        (when latest
+          (let* ((ver-dir (expand-file-name latest base-dir))
+                 (arch-dir (expand-file-name "x86_64-pc-linux-gnu" ver-dir))
+                 (backward-dir (expand-file-name "backward" ver-dir)))
+            (delq nil (list ver-dir
+                            (when (file-directory-p arch-dir) arch-dir)
+                            (when (file-directory-p backward-dir) backward-dir)))))))))
 
+(use-package ffap
+  :ensure nil
+  :config
+  (add-to-list 'ffap-alist '(simpc-mode . ffap-c-mode))
+  (setq ffap-c-path
+        (append '("/usr/include" "/usr/local/include")
+                (my/get-gcc-cpp-include-dirs))))
+
+(defun my/find-file-at-point ()
+  "Open C/C++ header or file at point in another window."
+  (interactive)
+  (save-excursion
+    (beginning-of-line)
+    (if (looking-at "^[ \t]*#[ \t]*include[ \t]*[<\"\\]\\([^>\"\\]+\\)[>\"\\]")
+        (let* ((header (match-string-no-properties 1))
+               (search-dirs (cons default-directory ffap-c-path))
+               (found (locate-file header search-dirs)))
+          (if found
+              (find-file-other-window found)
+            (message "Header not found in ffap-c-path: %s" header)))
+      (let ((guess (ffap-guesser)))
+        (if (and guess (file-exists-p guess))
+            (find-file-other-window guess)
+          (call-interactively #'find-file-other-window))))))
+
+(global-set-key (kbd "C-x C-g") #'my/find-file-at-point)
+(global-set-key (kbd "C-c i m") 'imenu)
+
+;; 为 simpc-mode 配置轻量级 Imenu 正则大纲（支持函数、结构体、类跳转）
+(defun my/simpc-setup-imenu ()
+  "Configure lightweight regex-based imenu index for `simpc-mode'."
+  (setq-local imenu-generic-expression
+              '(("Functions"
+                 "^[a-zA-Z_][a-zA-Z0-9_:*&<> \t]+?[ \t]+\\([a-zA-Z_][a-zA-Z0-9_:]*\\)[ \t]*([^;]*$"
+                 1)
+                ("Types"
+                 "^[ \t]*\\(?:typedef[ \t]+\\)?\\(?:struct\\|class\\|enum\\|union\\)[ \t]+\\([a-zA-Z_][a-zA-Z0-9_]*\\)"
+                 1))))
+
+(add-hook 'simpc-mode-hook #'my/simpc-setup-imenu)
+
+;; 13. Emacs Lisp 交互式表达式求值并插入结果（C-c C-j）
+(add-hook 'emacs-lisp-mode-hook
+          (lambda ()
+            (local-set-key (kbd "C-c C-j") #'eval-print-last-sexp)))
 (provide 'init-tools)
 ;;; init-tools.el ends here

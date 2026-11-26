@@ -19,6 +19,15 @@
 (package-initialize)
 
 (require 'use-package)
+;; 当本地索引过期导致安装失败时，自动刷新一次软件源并重试
+(defun my/package-install-with-refresh (orig-fun &rest args)
+  (condition-case nil
+      (apply orig-fun args)
+    (error
+     (package-refresh-contents)
+     (apply orig-fun args))))
+
+(advice-add 'package-install :around #'my/package-install-with-refresh)
 (setq use-package-always-ensure t)
 
 (use-package gruvbox-theme
