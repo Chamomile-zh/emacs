@@ -126,7 +126,14 @@
   :bind (:map dired-mode-map
               ("C-c C-e" . wdired-change-to-wdired-mode))) ; 编辑文件名，C-c C-c 提交
 
-;;;; 搜索与跳转
+;;;; 项目、搜索与跳转
+
+;; 内置 project.el：除了 Git 等版本控制标记，也认最近的语言构建文件。
+;; C-x p g 从识别出的项目根搜索；这里只登记选项，不提前加载 project.el。
+(with-eval-after-load 'project
+  (dolist (marker '("Cargo.toml" "build.zig" "CMakeLists.txt"
+                    "GNUmakefile" "makefile" "Makefile" "go.mod"))
+    (add-to-list 'project-vc-extra-root-markers marker)))
 
 ;; C-c s：递归搜索选区内容；无选区时提示输入搜索条件。
 (defun chamomile/rgrep-selected (beg end)

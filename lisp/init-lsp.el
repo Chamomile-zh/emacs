@@ -84,8 +84,8 @@
   :hook ((eglot-managed-mode . chamomile/corfu-for-eglot)
          (lisp-interaction-mode . chamomile/prepare-scratch-completion))
   :custom
-  ;; 输入一个字符后等待 100 毫秒；点号仍立即请求成员候选。
-  (corfu-auto-delay 0.1)
+  ;; 输入一个字符后立即请求候选，不额外等待；点号仍是成员补全触发键。
+  (corfu-auto-delay 0.0)
   (corfu-auto-prefix 1)
   (corfu-auto-trigger "."))
 

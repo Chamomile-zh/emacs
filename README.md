@@ -43,7 +43,10 @@
 | `M-x` / `M-X` | 用 Smex 搜索所有命令／当前主模式的命令 |
 | `C-x C-g` | 在另一个窗口打开光标处的文件；在 `#include` 行上会查找 C/C++ 头文件 |
 | `C-c s` | 从当前目录递归搜索选中的文字；没有选区时提示输入搜索条件 |
+| `C-x p g` | 用内置 Project 从项目根目录搜索正则表达式 |
 | `C-c i m` | 用 Imenu 跳转到当前缓冲区内的函数、类型或其他条目，列表由主模式提供 |
+
+项目根目录从当前目录向上查找：除了 `.git` 等版本控制标记，也识别 `Cargo.toml`（Rust）、`build.zig`（Zig）、`CMakeLists.txt` 或 Makefile（C/C++）、`go.mod`（Go）。子目录里的构建文件比仓库根更近时，`C-x p g` 会在该子项目中搜索。
 
 ### 窗口与 Git
 
@@ -157,7 +160,7 @@ Git 已跟踪的本地文本文件会在行号旁标出改动，并在状态栏�
 
 打开本地源码时，只有相应服务器在 Emacs 的 `exec-path` 中才会自动连接：`clangd`（C/C++）、`rust-analyzer`（Rust）、`zls`（Zig）、`typescript-language-server`（JS/TS/TSX）、`lua-language-server`（Lua）和 `bash-language-server`（Bash/sh）。使用 rustup 时，Rust 项目选用的工具链需要安装 `rust-analyzer` 组件。
 
-Eglot 接管后，输入一个字符并停顿 0.1 秒就会触发 Corfu 补全；输入 `.` 会立即请求候选。有候选时就会在光标旁弹窗，不需要按补全快捷键。
+Eglot 接管后，输入一个字符或 `.` 就会立即请求补全。有候选时 Corfu 会在光标旁弹窗，不需要按补全快捷键。
 
 在 `*scratch*` 中写 Elisp 也会自动弹出 Corfu，例如输入 `(add-ho` 后稍停。它使用 Emacs 内置的 Elisp 候选，不需要语言服务器；首次输入时才加载弹窗。
 

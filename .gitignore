@@ -5,9 +5,10 @@ eln-cache/
 auto-save-list/
 recentf.eld
 places.eld
+projects.eld
 tabsession.el
 history
-ido.last
+ido.last*
 smex-items
 package-quickstart.el
 *.elc
