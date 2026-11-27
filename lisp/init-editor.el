@@ -15,6 +15,10 @@
 (electric-pair-mode 1)
 (delete-selection-mode 1)
 
+;; 按嵌套深度给括号上色，首次进入编程缓冲区时才加载。
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+
 ;; 在命令行传入文件或首次打开 Dired 时，也要能恢复光标、监测外部改动。
 (global-auto-revert-mode 1)
 (save-place-mode 1)
