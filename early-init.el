@@ -17,6 +17,9 @@
 (push '(tool-bar-lines . 0) default-frame-alist)
 (push '(vertical-scroll-bars) default-frame-alist)
 
+;; 背景保留 85% 不透明度，文字不受影响。
+(add-to-list 'default-frame-alist '(alpha-background . 95))
+
 ;; 适配平铺窗口管理器（MangoWC / niri），禁止自动缩放 Frame
 (setq frame-inhibit-implied-resize t
       inhibit-startup-screen t)
