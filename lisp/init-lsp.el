@@ -1,6 +1,9 @@
 ;;; init-lsp.el --- On-demand language servers and completion -*- lexical-binding: t; -*-
 
-;; 仅为已验证的语言注册自动连接；打开文件时再检查服务器是否仍在 PATH。
+;;;; Eglot：连接语言服务器
+
+;; 为支持的本地源码按需连接 LSP，提供语义补全、跳转和诊断。
+;; 打开文件时才检查服务器是否仍在 PATH，不在启动时运行服务器。
 (defconst chamomile/eglot-local-servers
   '(("clangd" c-mode c++-mode c-ts-mode c++-ts-mode)
     ("rust-analyzer" rust-mode rust-ts-mode)
@@ -44,10 +47,16 @@
                   (js-ts-mode :language-id "javascript"))
                  . ("typescript-language-server" "--stdio"))))
 
-;; Eglot 接管后会启用 Flymake；在行尾显示最严重的诊断，不改变文件内容。
-;; 这里只设置选项，不提前加载 Flymake。
+;;;; Flymake：显示诊断
+
+;; Eglot 接管后会启用 Flymake；行尾显示最严重的诊断，不修改源码。
+;; M-x flymake-show-buffer-diagnostics 查看完整列表；这里不提前加载 Flymake。
 (setq flymake-show-diagnostics-at-end-of-line 'short)
 
+;;;; Corfu：自动补全弹窗
+
+;; 在 Eglot 管理的文件和 *scratch* 中自动弹窗，不需要手动触发。
+;; 弹窗中用 M-n / M-p 或上下键选候选，RET 确认，C-g 关闭。
 (defun chamomile/corfu-start-in-scratch ()
   "Enable automatic Elisp completion on the first edit in *scratch*."
   (remove-hook 'post-self-insert-hook #'chamomile/corfu-start-in-scratch t)

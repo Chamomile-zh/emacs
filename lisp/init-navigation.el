@@ -1,6 +1,8 @@
 ;;; init-navigation.el --- Navigation, windows, search and Git -*- lexical-binding: t; -*-
 
-;; Ido 必须尽早接管文件和缓冲区选择（包括其他命令发起的文件提示）。
+;;;; 文件、缓冲区和命令选择
+
+;; Ido：模糊选择文件和缓冲区；启动时接管 C-x C-f、C-x b 和其他文件提示。
 (use-package ido
   :ensure nil
   :init
@@ -11,19 +13,26 @@
   :config
   (ido-mode 1))
 
+;; Ido Vertical：把候选改成纵向列表，C-n / C-p 选择下一项 / 上一项。
 (use-package ido-vertical-mode
   :init
   (setq ido-vertical-define-keys 'C-n-and-C-p-only)
   :config
   (ido-vertical-mode 1))
 
+;; Smex：记忆命令使用记录，首次调用时加载。
 (use-package smex
-  :bind (("M-x" . smex)
-         ("M-X" . smex-major-mode-commands)))
+  :bind (("M-x" . smex)                       ; 搜索所有命令
+         ("M-X" . smex-major-mode-commands))) ; 搜索当前主模式的命令
 
+;;;; Git
+
+;; Magit：C-x g 打开当前仓库的状态与操作面板，首次使用才加载。
 (use-package magit
   :bind ("C-x g" . magit-status))
 
+;; Diff-hl：在行号旁标记 Git 改动；这里也集中维护状态栏的 +N -M 统计。
+;; C-x v [ / C-x v ] 跳到上一处 / 下一处改动，C-x v * 查看当前改动。
 (defvar-local chamomile/git-line-stat nil
   "Cached Git line counts displayed in the mode line.")
 
@@ -85,7 +94,9 @@
   (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh)
   (add-hook 'magit-post-refresh-hook #'chamomile/update-git-line-stat-after-magit))
 
-;; 按方向切换窗口：只注册 autoload 按键，首次使用才加载 Windmove。
+;;;; 窗口管理
+
+;; Windmove：Shift + 方向键切换到对应方向的窗口，首次使用才加载。
 (use-package windmove
   :ensure nil
   :bind (("S-<left>" . windmove-left)
@@ -93,12 +104,17 @@
          ("S-<up>" . windmove-up)
          ("S-<down>" . windmove-down)))
 
-;; 不延迟 Winner，否则首次撤销前的窗口布局不会被记录。
+;; Winner：C-c <left> / C-c <right> 撤销 / 重做窗口布局。
+;; 从启动就启用，才能记录第一次撤销之前的布局。
 (use-package winner
   :ensure nil
   :config
   (winner-mode 1))
 
+;;;; 目录浏览
+
+;; Dired：Emacs 内置文件管理器。C-x d 打开目录，C-x C-j 定位当前文件。
+;; 默认隐藏详情、目录优先，并用另一个 Dired 窗口的目录作为复制 / 移动目标。
 (use-package dired
   :ensure nil
   :init
@@ -108,8 +124,11 @@
         dired-recursive-deletes 'top)
   :hook (dired-mode . dired-hide-details-mode)
   :bind (:map dired-mode-map
-              ("C-c C-e" . wdired-change-to-wdired-mode)))
+              ("C-c C-e" . wdired-change-to-wdired-mode))) ; 编辑文件名，C-c C-c 提交
 
+;;;; 搜索与跳转
+
+;; C-c s：递归搜索选区内容；无选区时提示输入搜索条件。
 (defun chamomile/rgrep-selected (beg end)
   "Search for the active region with rgrep, or prompt when there is no region."
   (interactive (if (use-region-p)
@@ -120,8 +139,12 @@
     (rgrep (buffer-substring-no-properties beg end) "*" default-directory)))
 
 (keymap-global-set "C-c s" #'chamomile/rgrep-selected)
+
+;; C-c i m：用 Imenu 跳到当前缓冲区内的函数、类型或其他条目。
 (keymap-global-set "C-c i m" #'imenu)
 
+;; FFAP：从光标处识别路径；C-x C-g 在另一个窗口打开，也支持 C/C++ 头文件。
+;; 第一次被 Ido 或文件跳转命令用到时，才扫描系统头文件目录。
 (defun chamomile/get-gcc-cpp-include-dirs ()
   "Return the include paths of the newest GCC C++ headers on this system."
   (let ((base-dir "/usr/include/c++"))
@@ -134,7 +157,6 @@
                             (expand-file-name "x86_64-pc-linux-gnu" directory)
                             (expand-file-name "backward" directory))))))))
 
-;; FFAP 首次被 Ido 或文件跳转命令用到时，才扫描系统头文件目录。
 (use-package ffap
   :ensure nil
   :defer t

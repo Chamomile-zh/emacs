@@ -1,16 +1,22 @@
 ;;; init-packages.el --- Package policy and Custom settings -*- lexical-binding: t; -*-
 
+;;;; Custom 持久化
+
 ;; Custom 写入独立文件，不覆盖手写配置。
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (when (file-readable-p custom-file)
   (load custom-file nil 'nomessage))
 
+;;;; 软件源与安装策略
+
+;; package.el：使用 MELPA 和 GNU ELPA 管理插件。
 (require 'package)
 (setq package-archives
       '(("melpa" . "https://melpa.org/packages/")
         ("gnu"   . "https://elpa.gnu.org/packages/")))
 
-;; 使用 early-init.el 启用的自动激活缓存，不再手动扫描所有包。
+;; use-package：声明插件配置和懒加载入口，首次缺包时自动安装。
+;; 包激活由 early-init.el 的 quickstart 缓存负责，不手动重复初始化。
 (require 'use-package)
 (setq use-package-always-ensure t)
 

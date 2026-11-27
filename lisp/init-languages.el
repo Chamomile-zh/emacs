@@ -1,21 +1,27 @@
 ;;; init-languages.el --- Major modes and compilation -*- lexical-binding: t; -*-
 
-;; 语言主模式按文件后缀加载，不跟着配置文件一起载入。
+;;;; 按文件类型加载的主模式
+
+;; Rust Mode：为 .rs 提供语法高亮和缩进；语言服务器由 init-lsp.el 管理。
 (use-package rust-mode
   :mode "\\.rs\\'")
 
+;; Zig Mode：为 .zig 提供高亮与缩进，保存时不强制执行 zig fmt。
 (use-package zig-mode
   :mode "\\.zig\\'"
   :init
   (setq zig-format-on-save nil))
 
+;; Go Mode：为 .go 提供语法高亮和缩进。
 (use-package go-mode
   :mode "\\.go\\'")
 
+;; Lua Mode：用内置主模式编辑 .lua 文件。
 (use-package lua-mode
   :ensure nil
   :mode "\\.lua\\'")
 
+;; TypeScript Mode：编辑 .ts 和 .tsx，不依赖额外的 Tree-sitter 语法库。
 (use-package typescript-mode
   :mode (("\\.ts\\'" . typescript-mode)
          ("\\.tsx\\'" . chamomile/typescript-tsx-mode))
@@ -26,22 +32,26 @@
   (setq auto-mode-alist
         (delete '("\\.tsx?\\'" . typescript-mode) auto-mode-alist)))
 
+;; CMake Mode：为 CMakeLists.txt 和 .cmake 提供高亮和缩进。
 (use-package cmake-mode
   :mode ("CMakeLists\\.txt\\'" "\\.cmake\\'"))
 
+;; Markdown Mode：为 .md 和 .markdown 提供语法高亮和编辑命令。
 (use-package markdown-mode
   :mode ("\\.md\\'" "\\.markdown\\'"))
 
+;; TOML Mode：编辑 Cargo.toml 等 TOML 文件。
 (use-package toml-mode
   :mode "\\.toml\\'")
 
+;; Python：用内置主模式编辑 .py，缩进设为 4 空格。
 (use-package python
   :ensure nil
   :mode ("\\.py\\'" . python-mode)
   :init
   (setq python-indent-offset 4))
 
-;; 保留各 C/C++ 主模式原来的语法和项目集成，只统一缩进宽度。
+;; C/C++：保留现有主模式的语法与项目集成，统一缩进为 4 空格。
 (defun chamomile/c-indent-four-spaces ()
   "Use a four-column indentation step in a CC Mode buffer."
   (setq-local c-basic-offset 4))
@@ -51,6 +61,9 @@
 (add-hook 'c++-mode-hook #'chamomile/c-indent-four-spaces)
 (setq c-ts-indent-offset 4)
 
+;;;; 编译与输出
+
+;; 使用内置 Compile；按键触发时才查找构建文件并选定命令。
 (defun chamomile/makefile-present-p (directory)
   "Return non-nil if DIRECTORY contains a Makefile recognized by GNU Make."
   (seq-some (lambda (name) (file-regular-p (expand-file-name name directory)))
@@ -125,9 +138,10 @@
   (chamomile/run-compile-command #'recompile))
 
 (setq compilation-scroll-output 'first-error)
-(keymap-global-set "<f5>" #'chamomile/compile)
-(keymap-global-set "<f6>" #'chamomile/recompile)
+(keymap-global-set "<f5>" #'chamomile/compile)   ; 提示并执行按项目预填的命令
+(keymap-global-set "<f6>" #'chamomile/recompile) ; 重跑当前缓冲区的编译命令
 
+;; ANSI Color：把编译进程的颜色转义序列渲染成真正的颜色。
 (use-package ansi-color
   :ensure nil
   :hook (compilation-filter . ansi-color-compilation-filter))

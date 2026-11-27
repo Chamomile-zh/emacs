@@ -1,9 +1,13 @@
 ;;; init-ui.el --- Theme, fonts and display defaults -*- lexical-binding: t; -*-
 
-;; 首帧直接使用目标主题，避免延迟加载时闪过默认配色。
+;;;; 主题
+
+;; Gruvbox Theme：启动时应用深色配色，避免首帧闪过默认主题。
 (use-package gruvbox-theme
   :config
   (load-theme 'gruvbox-dark-medium t))
+
+;;;; GUI 字体
 
 (defun chamomile/setup-fonts ()
   "Use installed monospace and CJK fonts in the selected GUI frame."
@@ -24,6 +28,9 @@
 (add-hook 'after-init-hook #'chamomile/setup-fonts)
 (add-hook 'server-after-make-frame-hook #'chamomile/setup-fonts)
 
+;;;; 滚动与行号
+
+;; 小步滚动；左侧显示相对行号，底部显示当前列号。
 (setq scroll-step 1
       scroll-conservatively 10000)
 (setq display-line-numbers-type 'relative)
