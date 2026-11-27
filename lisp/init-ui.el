@@ -6,14 +6,19 @@
   (load-theme 'gruvbox-dark-medium t))
 
 (defun chamomile/setup-fonts ()
-  "Configure the GUI font for both ASCII and CJK."
+  "Use installed monospace and CJK fonts in the selected GUI frame."
   (when (display-graphic-p)
-    (set-face-attribute 'default nil
-                        :family "Maple Mono NF CN"
-                        :height 130
-                        :weight 'regular)
-    (dolist (charset '(kana han symbol cjk-misc bopomofo))
-      (set-fontset-font t charset (font-spec :family "Maple Mono NF CN")))))
+    ;; Maple Mono 用于代码；没有安装时保留 Emacs 的默认字族。
+    (when (member "Maple Mono" (font-family-list))
+      (set-face-attribute 'default (selected-frame)
+                          :family "Maple Mono"
+                          :height 130
+                          :weight 'regular))
+    ;; 普通 Maple Mono 不含中文。只为 CJK 文字指定字体，其他符号照常回退。
+    (when (member "Noto Sans CJK SC" (font-family-list))
+      (dolist (script '(han kana cjk-misc bopomofo))
+        (set-fontset-font t script (font-spec :family "Noto Sans CJK SC")
+                          (selected-frame) 'prepend)))))
 
 ;; 普通 GUI 和 daemon 后续新建的 GUI frame 都需要字体；终端跳过。
 (add-hook 'after-init-hook #'chamomile/setup-fonts)

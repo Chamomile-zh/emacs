@@ -48,7 +48,19 @@
 ;; 这里只设置选项，不提前加载 Flymake。
 (setq flymake-show-diagnostics-at-end-of-line 'short)
 
-;; 只有 Eglot 接管后才加载弹窗；停止接管时关闭该缓冲区的自动补全。
+(defun chamomile/corfu-start-in-scratch ()
+  "Enable automatic Elisp completion on the first edit in *scratch*."
+  (remove-hook 'post-self-insert-hook #'chamomile/corfu-start-in-scratch t)
+  (setq-local corfu-auto t)
+  (corfu-mode 1))
+
+(defun chamomile/prepare-scratch-completion ()
+  "Defer loading Corfu until the user types in the Lisp scratch buffer."
+  ;; *scratch* 自带 Elisp 补全来源；启动时创建缓冲区不等于开始编辑。
+  (when (and (equal (buffer-name) "*scratch*") (not buffer-file-name))
+    (add-hook 'post-self-insert-hook #'chamomile/corfu-start-in-scratch nil t)))
+
+;; LSP 缓冲区在 Eglot 接管后才启用弹窗；停止接管时关闭。
 (defun chamomile/corfu-for-eglot ()
   "Enable automatic completion while Eglot manages the buffer."
   (if (eglot-managed-p)
@@ -60,11 +72,12 @@
 
 (use-package corfu
   :commands corfu-mode
-  :hook (eglot-managed-mode . chamomile/corfu-for-eglot)
+  :hook ((eglot-managed-mode . chamomile/corfu-for-eglot)
+         (lisp-interaction-mode . chamomile/prepare-scratch-completion))
   :custom
-  ;; 两个字符后短暂停顿即弹出；输入点号则立即请求成员候选。
-  (corfu-auto-delay 0.2)
-  (corfu-auto-prefix 2)
+  ;; 输入一个字符后等待 100 毫秒；点号仍立即请求成员候选。
+  (corfu-auto-delay 0.1)
+  (corfu-auto-prefix 1)
   (corfu-auto-trigger "."))
 
 (provide 'init-lsp)

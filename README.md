@@ -157,6 +157,8 @@ Git 已跟踪的本地文本文件会在行号旁标出改动，并在状态栏�
 
 打开本地源码时，只有相应服务器在 Emacs 的 `exec-path` 中才会自动连接：`clangd`（C/C++）、`rust-analyzer`（Rust）、`zls`（Zig）、`typescript-language-server`（JS/TS/TSX）、`lua-language-server`（Lua）和 `bash-language-server`（Bash/sh）。使用 rustup 时，Rust 项目选用的工具链需要安装 `rust-analyzer` 组件。
 
-Eglot 接管后，输入两个字符并短暂停顿，或输入 `.` 时，有候选就会在光标旁弹出 Corfu。不需要按补全快捷键。
+Eglot 接管后，输入一个字符并停顿 0.1 秒就会触发 Corfu 补全；输入 `.` 会立即请求候选。有候选时就会在光标旁弹窗，不需要按补全快捷键。
+
+在 `*scratch*` 中写 Elisp 也会自动弹出 Corfu，例如输入 `(add-ho` 后稍停。它使用 Emacs 内置的 Elisp 候选，不需要语言服务器；首次输入时才加载弹窗。
 
 Flymake 会在行尾显示最严重的一条诊断（仅显示，不修改源码）。用 `M-x flymake-show-buffer-diagnostics` 查看当前文件的完整诊断列表。
