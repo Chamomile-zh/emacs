@@ -24,6 +24,22 @@
 (use-package magit
   :bind ("C-x g" . magit-status))
 
+(defun chamomile/enable-git-gutter ()
+  "Show Git change indicators for the current tracked file."
+  (when (and buffer-file-name
+             (not (file-remote-p buffer-file-name))
+             (eq (vc-backend buffer-file-name) 'Git))
+    (diff-hl-mode 1)))
+
+(use-package diff-hl
+  :commands diff-hl-mode
+  :init
+  ;; 打开 Git 已跟踪的本地文件时才加载，Markdown 也适用。
+  (add-hook 'find-file-hook #'chamomile/enable-git-gutter)
+  :config
+  ;; 在 Magit 中暂存、提交或刷新后，同步更新行边标记。
+  (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
+
 ;; 按方向切换窗口：只注册 autoload 按键，首次使用才加载 Windmove。
 (use-package windmove
   :ensure nil
