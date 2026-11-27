@@ -78,6 +78,8 @@
 
 ## LSP 和自动补全
 
-打开本地源码时，只有相应服务器在 Emacs 的 `exec-path` 中才会自动连接：`clangd`（C/C++）、`zls`（Zig）、`typescript-language-server`（JS/TS/TSX）、`lua-language-server`（Lua）和 `bash-language-server`（Bash/sh）。Rust 等尚未配置服务器的语言仍能使用各自的主模式。
+打开本地源码时，只有相应服务器在 Emacs 的 `exec-path` 中才会自动连接：`clangd`（C/C++）、`rust-analyzer`（Rust）、`zls`（Zig）、`typescript-language-server`（JS/TS/TSX）、`lua-language-server`（Lua）和 `bash-language-server`（Bash/sh）。使用 rustup 时，Rust 项目选用的工具链需要安装 `rust-analyzer` 组件。
 
 Eglot 接管后，输入两个字符并短暂停顿，或输入 `.` 时，有候选就会在光标旁弹出 Corfu。不需要按补全快捷键。
+
+Flymake 会在行尾显示最严重的一条诊断（仅显示，不修改源码）。用 `M-x flymake-show-buffer-diagnostics` 查看当前文件的完整诊断列表。

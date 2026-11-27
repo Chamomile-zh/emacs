@@ -3,6 +3,7 @@
 ;; 仅为已验证的语言注册自动连接；打开文件时再检查服务器是否仍在 PATH。
 (defconst chamomile/eglot-local-servers
   '(("clangd" c-mode c++-mode c-ts-mode c++-ts-mode)
+    ("rust-analyzer" rust-mode rust-ts-mode)
     ("zls" zig-mode zig-ts-mode)
     ("typescript-language-server" js-mode js-ts-mode typescript-mode
      typescript-ts-mode tsx-ts-mode)
@@ -42,6 +43,10 @@
                   (js-mode :language-id "javascript")
                   (js-ts-mode :language-id "javascript"))
                  . ("typescript-language-server" "--stdio"))))
+
+;; Eglot 接管后会启用 Flymake；在行尾显示最严重的诊断，不改变文件内容。
+;; 这里只设置选项，不提前加载 Flymake。
+(setq flymake-show-diagnostics-at-end-of-line 'short)
 
 ;; 只有 Eglot 接管后才加载弹窗；停止接管时关闭该缓冲区的自动补全。
 (defun chamomile/corfu-for-eglot ()
