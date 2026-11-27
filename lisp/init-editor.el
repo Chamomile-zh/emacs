@@ -8,6 +8,15 @@
       select-enable-clipboard t
       select-enable-primary t)
 
+;; 退出时用 Emacs 底部的文字提示代替系统弹窗，仍然确认未保存的修改。
+(defun chamomile/exit-with-text-prompts (exit &rest args)
+  "Run EXIT with ARGS, using text prompts instead of GUI dialogs."
+  (let ((use-dialog-box nil)
+        (use-dialog-box-override nil))
+    (apply exit args)))
+
+(advice-add 'save-buffers-kill-emacs :around #'chamomile/exit-with-text-prompts)
+
 (setq-default indent-tabs-mode nil
               tab-width 4
               show-trailing-whitespace t)
