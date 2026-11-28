@@ -159,9 +159,6 @@ Git 已跟踪的本地文本文件会在行号旁标出改动，并在状态栏�
 | `C-x p i` | 抓取剪贴板 URL 的网页标题，并插入 Org 链接 |
 | `C-x p t` | 在当前位置从剪贴板 URL 插入一个带链接的 TODO |
 | `C-x p w` | 复制当前 Org 标题的纯文本，不含 TODO 状态和标签 |
-| `C-c C-x C-l` | 在 GUI 中切换光标处的 LaTeX 公式预览；加两个 `C-u` 预览整篇文档 |
-
-公式预览使用 `latex` 和 `dvisvgm`，生成的 SVG 存在 `cache/org-latex/`，不影响 Markdown 导出。
 
 ## LSP 和自动补全
 
