@@ -19,7 +19,19 @@
         org-log-done 'time)
   :config
   ;; Org 核心也会查询日程文件，比如补全 refile 的目标。
-  (setq org-agenda-files (list chamomile/org-agenda-dir)))
+  (setq org-agenda-files (list chamomile/org-agenda-dir))
+  ;; C-c C-x C-l：用 latex + dvisvgm 渲染 SVG，缓存不写到笔记旁边。
+  (setq org-preview-latex-default-process 'dvisvgm
+        org-preview-latex-image-directory
+        (expand-file-name "org-latex/" chamomile/cache-dir))
+  ;; 只替换 dvisvgm 的预览导言区：latex 不支持 fontspec，本机也没有 ulem。
+  ;; 保留常用数学宏包，不改变 Org 导出所用的导言区。
+  (setf (alist-get 'dvisvgm org-preview-latex-process-alist)
+        (plist-put (copy-sequence (alist-get 'dvisvgm org-preview-latex-process-alist))
+                   :latex-header
+                   "\\documentclass{article}
+\\usepackage{color,amsmath,amssymb}
+\\pagestyle{empty}")))
 
 ;; 用 MOVE_COUNTER 属性记录任务被推迟的次数。
 (defun chamomile/org-increment-move-counter ()

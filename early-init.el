@@ -18,7 +18,7 @@
 (unless (file-directory-p chamomile/cache-dir)
   (make-directory chamomile/cache-dir t))
 
-;; 只改存储位置，不额外开启 Recentf、Savehist 或自动保存。
+;; 在这里统一设置状态文件路径；自动保存副本由 init-editor.el 配置。
 (setq ido-save-directory-list-file (expand-file-name "ido.last" chamomile/cache-dir)
       save-place-file (expand-file-name "places.eld" chamomile/cache-dir)
       smex-save-file (expand-file-name "smex-items" chamomile/cache-dir)

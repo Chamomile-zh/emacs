@@ -2,11 +2,18 @@
 
 ;;;; 文件保存与退出
 
-;; 不创建备份、自动保存和锁文件；用短回答确认操作。
+;; 不创建备份和锁文件；用短回答确认操作。
 (setq make-backup-files nil
-      auto-save-default nil
       create-lockfiles nil
       use-short-answers t)
+
+;; 自动保存只写恢复副本，不覆盖源文件；用完整路径的散列区分同名文件。
+(let ((directory (expand-file-name "auto-save/" chamomile/cache-dir)))
+  (unless (file-directory-p directory)
+    (with-file-modes #o700
+      (make-directory directory t)))
+  (setq auto-save-default t
+        auto-save-file-name-transforms `((".*" ,directory sha256))))
 
 ;; C-x C-c 或关闭窗口退出：用底部文字确认未保存的修改，不弹系统对话框。
 (defun chamomile/exit-with-text-prompts (exit &rest args)

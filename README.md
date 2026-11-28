@@ -16,6 +16,8 @@
 
 本机运行数据集中在 `cache/`：Ido、Smex、光标位置、项目列表、Recentf / Savehist 历史、自动保存索引、Eshell 数据、包激活缓存和原生编译缓存。`cache/` 不纳入版本控制；其中的历史记录和恢复索引不是可重建的缓存，清理前请留意。已安装的包仍在 `elpa/`，本地 Custom 设置仍在 `custom.el`。
 
+编辑文件时，Emacs 会把未保存的改动写入 `cache/auto-save/` 下的恢复副本，不会自动覆盖源文件。意外退出后可用 `M-x recover-file` 恢复。Recentf 不会自动启用。
+
 包激活缓存位于 `cache/package-quickstart.el`（及其 `.elc`）。如果需要重建，执行 `M-x package-quickstart-refresh`。`M-x emacs-init-time` 可查看启动耗时。
 
 ## 快捷键速查
@@ -157,6 +159,9 @@ Git 已跟踪的本地文本文件会在行号旁标出改动，并在状态栏�
 | `C-x p i` | 抓取剪贴板 URL 的网页标题，并插入 Org 链接 |
 | `C-x p t` | 在当前位置从剪贴板 URL 插入一个带链接的 TODO |
 | `C-x p w` | 复制当前 Org 标题的纯文本，不含 TODO 状态和标签 |
+| `C-c C-x C-l` | 在 GUI 中切换光标处的 LaTeX 公式预览；加两个 `C-u` 预览整篇文档 |
+
+公式预览使用 `latex` 和 `dvisvgm`，生成的 SVG 存在 `cache/org-latex/`，不影响 Markdown 导出。
 
 ## LSP 和自动补全
 
