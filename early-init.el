@@ -34,6 +34,78 @@
       transient-levels-file (expand-file-name "transient/levels.el" chamomile/cache-dir)
       transient-values-file (expand-file-name "transient/values.el" chamomile/cache-dir))
 
+;;;; load-path 过滤（启动加速）
+;; stole from https://emacs-china.org/t/emacs/30532/5
+;; load-path 越长，load/require 每次查找文件都要遍历全部目录。
+;; 首次命中后把“哪些目录真有这个文件”记下来，之后只探测这几个目录，
+;; 并把结果持久化到 cache，跨会话复用。
+(defvar chamomile/lpf-cache-file
+  (expand-file-name "load-path-filter-cache.el" chamomile/cache-dir)
+  "load-path 过滤器的持久化缓存文件。")
+
+(defvar chamomile/lpf-cache
+  (let ((table (and (file-readable-p chamomile/lpf-cache-file)
+                    (with-temp-buffer
+                      (insert-file-contents chamomile/lpf-cache-file)
+                      (goto-char (point-min))
+                      (condition-case nil
+                          (read (current-buffer))
+                        (error nil))))))
+    (if (hash-table-p table)
+        table
+      (make-hash-table :test #'equal)))
+  "load-path 过滤缓存：键为文件名，值为命中该文件的目录列表。")
+
+;; 退出时序列化写回，供下次启动直接命中。
+(add-hook 'kill-emacs-hook
+          (lambda ()
+            (with-temp-file chamomile/lpf-cache-file
+              (insert (prin1-to-string chamomile/lpf-cache)))))
+
+(defvar chamomile/lpf-training t
+  "非 nil 时，缓存未命中则训练（填充缓存）。")
+
+(defvar chamomile/lpf-validate t
+  "非 nil 时，命中后校验条目是否仍有效，失效则删除并重新训练。")
+
+(defun chamomile/lpf-match (path file suffixes)
+  "在 PATH 中查找 FILE（依次尝试 SUFFIXES）实际存在的目录列表。"
+  (catch 'found
+    (dolist (suffix suffixes)
+      (let ((name (concat file suffix))
+            (dirs nil))
+        (dolist (dir path)
+          (when (file-readable-p (file-name-concat dir name))
+            (push dir dirs)))
+        (when dirs
+          (throw 'found (nreverse dirs)))))))
+
+(defun chamomile/lpf-train (path file suffixes)
+  "把 FILE 在 PATH 中的命中目录写入缓存并返回。"
+  (if (or (file-directory-p file)
+          (not chamomile/lpf-training))
+      path
+    (let ((val (chamomile/lpf-match path file suffixes)))
+      (when val
+        (puthash file val chamomile/lpf-cache))
+      val)))
+
+(defun chamomile/lpf (path file suffixes)
+  "load-path 过滤函数：命中时只返回少数目录，并保留完整 PATH 兜底。"
+  (if-let* ((val (gethash file chamomile/lpf-cache)))
+      ;; 命中：校验失效则删除缓存并重新训练。
+      (progn
+        (when (and chamomile/lpf-validate
+                   (null (chamomile/lpf-match val file suffixes)))
+          (remhash file chamomile/lpf-cache)
+          (setq val (chamomile/lpf-train path file suffixes)))
+        (append val path))
+    ;; 未命中：训练并填充缓存，失败则回退完整 PATH。
+    (or (chamomile/lpf-train path file suffixes)
+        path)))
+
+(setq load-path-filter-function #'chamomile/lpf)
+
 ;; 包激活和原生编译在读取 init.el 前就可能用到缓存，必须在这里指定路径。
 (setq package-quickstart t
       package-quickstart-file (expand-file-name "package-quickstart.el" chamomile/cache-dir))
