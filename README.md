@@ -14,7 +14,9 @@
 
 模块文件在启动时主要登记快捷键、后缀和 hook。主题和 Ido 立即启用；Winner 从启动就记录窗口布局。Magit、Smex、Windmove、语言主模式和 Org 工具在实际用到时才加载。议程目录仅在加载 Agenda 或 Capture 时创建。
 
-首次启用包激活缓存时，可执行 `M-x package-quickstart-refresh`。`M-x emacs-init-time` 可查看启动耗时。
+本机运行数据集中在 `cache/`：Ido、Smex、光标位置、项目列表、Recentf / Savehist 历史、自动保存索引、Eshell 数据、包激活缓存和原生编译缓存。`cache/` 不纳入版本控制；其中的历史记录和恢复索引不是可重建的缓存，清理前请留意。已安装的包仍在 `elpa/`，本地 Custom 设置仍在 `custom.el`。
+
+包激活缓存位于 `cache/package-quickstart.el`（及其 `.elc`）。如果需要重建，执行 `M-x package-quickstart-refresh`。`M-x emacs-init-time` 可查看启动耗时。
 
 ## 快捷键速查
 

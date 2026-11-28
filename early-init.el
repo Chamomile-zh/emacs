@@ -11,8 +11,28 @@
 
 (add-hook 'emacs-startup-hook #'chamomile/restore-gc-threshold)
 
-;; 用预生成的 autoload 缓存加速启动时的包激活
-(setq package-quickstart t)
+;;;; 运行数据与缓存
+
+(defvar chamomile/cache-dir (expand-file-name "cache/" user-emacs-directory)
+  "存放本机 Emacs 历史、会话状态和生成缓存。")
+(unless (file-directory-p chamomile/cache-dir)
+  (make-directory chamomile/cache-dir t))
+
+;; 只改存储位置，不额外开启 Recentf、Savehist 或自动保存。
+(setq ido-save-directory-list-file (expand-file-name "ido.last" chamomile/cache-dir)
+      save-place-file (expand-file-name "places.eld" chamomile/cache-dir)
+      smex-save-file (expand-file-name "smex-items" chamomile/cache-dir)
+      project-list-file (expand-file-name "projects.eld" chamomile/cache-dir)
+      recentf-save-file (expand-file-name "recentf.eld" chamomile/cache-dir)
+      savehist-file (expand-file-name "history" chamomile/cache-dir)
+      auto-save-list-file-prefix (expand-file-name "auto-save-list/.saves-" chamomile/cache-dir)
+      eshell-directory-name (expand-file-name "eshell/" chamomile/cache-dir))
+
+;; 包激活和原生编译在读取 init.el 前就可能用到缓存，必须在这里指定路径。
+(setq package-quickstart t
+      package-quickstart-file (expand-file-name "package-quickstart.el" chamomile/cache-dir))
+(when (and (fboundp 'startup-redirect-eln-cache) (native-comp-available-p))
+  (startup-redirect-eln-cache (expand-file-name "eln-cache/" chamomile/cache-dir)))
 
 ;;;; 首帧外观
 
