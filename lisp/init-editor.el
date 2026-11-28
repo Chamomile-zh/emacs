@@ -99,5 +99,18 @@
 (with-eval-after-load 'elisp-mode
   (keymap-set emacs-lisp-mode-map "C-c C-j" #'eval-print-last-sexp))
 
+;;;; 文档阅读（PDF / EPUB）
+
+;; EMuReader：基于 MuPDF 的通用文档阅读器，替代 doc-view 和 nov.el。
+;; find-file 打开 PDF/EPUB/MOBI/CBZ 等会自动进入 emureader-mode。
+;; 依赖系统库 libmupdf（Arch: sudo pacman -S libmupdf）；首次使用前需执行
+;; M-x emureader-build 编译原生动态模块，之后无需重复。
+(use-package emureader
+  :defer t
+  :config
+  ;; 深色主题下反转文档颜色，让白底 PDF 变成暗色；单文档可用
+  ;; M-x emureader-dark-mode 临时切换。
+  (emureader-global-dark-mode 1))
+
 (provide 'init-editor)
 ;;; init-editor.el ends here
