@@ -14,7 +14,7 @@
 
 模块文件在启动时主要登记快捷键、后缀和 hook。主题和 Ido 立即启用；Winner 从启动就记录窗口布局。Magit、Smex、Windmove、语言主模式和 Org 工具在实际用到时才加载。议程目录仅在加载 Agenda 或 Capture 时创建。
 
-本机运行数据集中在 `cache/`：Ido、Smex、光标位置、项目列表、Recentf / Savehist 历史、自动保存索引、Eshell 数据、包激活缓存和原生编译缓存。`cache/` 不纳入版本控制；其中的历史记录和恢复索引不是可重建的缓存，清理前请留意。已安装的包仍在 `elpa/`，本地 Custom 设置仍在 `custom.el`。
+本机运行数据集中在 `cache/`：Ido、Smex、光标位置、项目列表、书签、Recentf / Savehist 历史、自动保存索引、Eshell 数据、包激活缓存和原生编译缓存。`cache/` 不纳入版本控制；其中的书签、历史记录和恢复索引不是可重建的缓存，清理前请留意。已安装的包仍在 `elpa/`，本地 Custom 设置仍在 `custom.el`。
 
 编辑文件时，Emacs 会把未保存的改动写入 `cache/auto-save/` 下的恢复副本，不会自动覆盖源文件。意外退出后可用 `M-x recover-file` 恢复。Recentf 不会自动启用。
 

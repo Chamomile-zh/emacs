@@ -23,10 +23,16 @@
       save-place-file (expand-file-name "places.eld" chamomile/cache-dir)
       smex-save-file (expand-file-name "smex-items" chamomile/cache-dir)
       project-list-file (expand-file-name "projects.eld" chamomile/cache-dir)
+      bookmark-default-file (expand-file-name "bookmarks.eld" chamomile/cache-dir)
       recentf-save-file (expand-file-name "recentf.eld" chamomile/cache-dir)
       savehist-file (expand-file-name "history" chamomile/cache-dir)
       auto-save-list-file-prefix (expand-file-name "auto-save-list/.saves-" chamomile/cache-dir)
-      eshell-directory-name (expand-file-name "eshell/" chamomile/cache-dir))
+      eshell-directory-name (expand-file-name "eshell/" chamomile/cache-dir)
+      ;; transient 内置于 Emacs，默认把历史写到 user-emacs-directory/transient/。
+      ;; 这些变量须在 transient 首次加载（如 magit）前设置，否则会读回旧路径。
+      transient-history-file (expand-file-name "transient/history.el" chamomile/cache-dir)
+      transient-levels-file (expand-file-name "transient/levels.el" chamomile/cache-dir)
+      transient-values-file (expand-file-name "transient/values.el" chamomile/cache-dir))
 
 ;; 包激活和原生编译在读取 init.el 前就可能用到缓存，必须在这里指定路径。
 (setq package-quickstart t
