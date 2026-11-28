@@ -21,6 +21,13 @@
   ;; Org 核心也会查询日程文件，比如补全 refile 的目标。
   (setq org-agenda-files (list chamomile/org-agenda-dir)))
 
+;; Org Modern：给 Org 缓冲区现代排版外观（纯显示，不改动文件内容）。
+;; 随 org 一起懒加载，首次打开 .org 时才启用。
+(use-package org-modern
+  :after org
+  :config
+  (global-org-modern-mode 1))
+
 ;; 用 MOVE_COUNTER 属性记录任务被推迟的次数。
 (defun chamomile/org-increment-move-counter ()
   "Increment the MOVE_COUNTER property of the current Org heading."
