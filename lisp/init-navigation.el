@@ -114,7 +114,8 @@
 ;;;; 目录浏览
 
 ;; Dired：Emacs 内置文件管理器。C-x d 打开目录，C-x C-j 定位当前文件。
-;; 默认隐藏详情、目录优先，并用另一个 Dired 窗口的目录作为复制 / 移动目标。
+;; 默认显示权限、大小和时间等详情；按 ( 可切换显示。
+;; 目录优先，并用另一个 Dired 窗口的目录作为复制 / 移动目标。
 (use-package dired
   :ensure nil
   :init
@@ -122,8 +123,8 @@
         dired-listing-switches "-alh --group-directories-first"
         dired-recursive-copies 'always
         dired-recursive-deletes 'top)
-  :hook (dired-mode . dired-hide-details-mode)
   :bind (:map dired-mode-map
+              ("b" . dired-up-directory) ; 返回上一级，保留原来的 ^
               ("C-c C-e" . wdired-change-to-wdired-mode))) ; 编辑文件名，C-c C-c 提交
 
 ;;;; 项目、搜索与跳转
